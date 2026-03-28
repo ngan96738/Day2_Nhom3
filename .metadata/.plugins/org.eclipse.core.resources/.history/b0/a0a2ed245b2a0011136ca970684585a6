@@ -1,0 +1,99 @@
+#include "stm32f401re_rcc.h"
+#include "stm32f401re_gpio.h"
+#include "misc.h"
+#include "stm32f4xx_exti.h"
+#include "stm32f4xx_syscfg.h"
+
+// Định nghĩa các macro để sử dụng tương ứng với hàm Init của đề bài
+#define LED_GPIO_PORT       GPIOA
+#define LED_GPIO_PIN        GPIO_Pin_5
+#define LEDControl_SetClock RCC_AHB1Periph_GPIOA
+
+#define BUTTON_IT_GPIO_PORT GPIOC
+#define BUTTON_IT_GPIO_PIN  GPIO_Pin_13
+#define BUTTONIT_SetClock   RCC_AHB1Periph_GPIOC
+#define SYSCFG_Clock        RCC_APB2Periph_SYSCFG
+
+// Biến trạng thái toàn cục
+volatile uint8_t Status = 0;
+
+// Bước 3: Cấu hình chân PA5 của led trên Board STM32 ở chế độ output
+void Led_Init(void) {
+    GPIO_InitTypeDef GPIO_InitStructure;
+    RCC_AHB1PeriphClockCmd(LEDControl_SetClock, ENABLE);
+
+    GPIO_InitStructure.GPIO_Pin = LED_GPIO_PIN;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+    GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_DOWN;
+
+    GPIO_Init(LED_GPIO_PORT, &GPIO_InitStructure);
+}
+
+// Bước 4: Xây dựng hàm cấu hình cho phép ngắt khi nút ấn kết nối với chân PC13
+void Interrupt_Init(void) {
+    // Bước 4.1: Khai báo các biến
+    GPIO_InitTypeDef GPIO_InitStructure;
+    EXTI_InitTypeDef EXTI_InitStructure;
+    NVIC_InitTypeDef NVIC_InitStructure;
+
+    // Bước 4.2: Khởi tạo chân GPIO PC13
+    RCC_AHB1PeriphClockCmd(BUTTONIT_SetClock, ENABLE);
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
+    GPIO_InitStructure.GPIO_Pin = BUTTON_IT_GPIO_PIN;
+    GPIO_Init(BUTTON_IT_GPIO_PORT, &GPIO_InitStructure);
+
+    // Bước 4.3: Cấu hình sử dụng Line ngắt 13
+    RCC_APB2PeriphClockCmd(SYSCFG_Clock, ENABLE);
+    SYSCFG_EXTILineConfig(EXTI_PortSourceGPIOC, EXTI_PinSource13);
+
+    // Bước 4.4 (EXTI): Cấu hình sử dụng ngắt
+    EXTI_InitStructure.EXTI_Line = EXTI_Line13;
+    EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
+    EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising_Falling;
+    EXTI_InitStructure.EXTI_LineCmd = ENABLE;
+    EXTI_Init(&EXTI_InitStructure);
+
+    // Bước 4.4 (NVIC): Cấu hình trình phục vụ ngắt NVIC
+    NVIC_InitStructure.NVIC_IRQChannel = EXTI15_10_IRQn;
+    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
+    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
+    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+    NVIC_Init(&NVIC_InitStructure);
+}
+
+// Bước 6: Xây dựng hàm LedControl_SetStatus
+void LedControl_SetStatus(uint8_t status) {
+    if (status == 1) {
+        GPIO_SetBits(LED_GPIO_PORT, LED_GPIO_PIN); // Bật LED
+        // Tạo một vòng lặp trễ ngắn để dễ dàng quan sát LED sáng rồi tắt
+        for (volatile uint32_t i = 0; i < 500000; i++);
+        GPIO_ResetBits(LED_GPIO_PORT, LED_GPIO_PIN); // Tắt LED trở lại ban đầu
+    }
+}
+
+int main(void) {
+    // Bước 7: Cấu hình trước hàm while (1)
+    SystemCoreClockUpdate();
+    Led_Init();
+    Interrupt_Init();
+
+    // Bước 8: Vòng lặp chính
+    while(1) {
+        if (Status == 1) {
+            LedControl_SetStatus(Status);
+            Status = 0; // Reset trạng thái sau khi đã điều khiển LED
+        }
+    }
+}
+
+// Bước 5: Khai báo hàm phục vụ ngắt trên chân PC13
+void EXTI15_10_IRQHandler(void) {
+    if(EXTI_GetFlagStatus(EXTI_Line13) == SET) {
+        Status = 1; // Cập nhật biến trạng thái khi có ngắt
+        EXTI_ClearITPendingBit(EXTI_Line13); // Xóa cờ ngắt
+    }
+}

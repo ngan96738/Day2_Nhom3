@@ -1,0 +1,41 @@
+/*******************************************************************************
+ * INCLUDE FILES
+ ******************************************************************************/
+#include <stdio.h>
+#include <stdint.h>
+#include <stm32f401re.h>
+#include "stm32f401re_rcc.h"  // Thư viện RCC cấp xung clock cho GPIO
+#include "stm32f401re_gpio.h" // Thư viện GPIO
+
+/*******************************************************************************
+ * PRIVATE TYPES and DEFINITIONS
+ ******************************************************************************/
+#define BUTTON_PRESS                            0
+#define BUTTON_RELEASE                          1
+
+// Define LED (PA0)
+#define LED_GPIO_PORT                           GPIOA
+#define LED_GPIO_PIN                            GPIO_Pin_0
+#define LED_GPIO_CLOCK_EN                       RCC_AHB1Periph_GPIOA
+
+// Define Buzzer (PC9)
+#define BUZZER_GPIO_PORT                        GPIOC
+#define BUZZER_GPIO_PIN                         GPIO_Pin_9
+#define BUZZER_GPIO_CLOCK_EN                    RCC_AHB1Periph_GPIOC
+
+// Define Button B2 (PB3)
+#define BUTTON_GPIO_PORT                        GPIOB
+#define BUTTON_GPIO_PIN                         GPIO_Pin_3
+#define BUTTON_GPIO_CLOCK_EN                    RCC_AHB1Periph_GPIOB
+
+/*******************************************************************************
+ * PRIVATE FUNCTIONS PROTOTYPE
+ ******************************************************************************/
+static void mainInit(void);
+static void led_Init(void);
+static void buttonB2_Init(void);
+static void buzzer_Init(void);
+
+/*******************************************************************************
+ * MAIN FUNCTION
+ ******************************************************************************/

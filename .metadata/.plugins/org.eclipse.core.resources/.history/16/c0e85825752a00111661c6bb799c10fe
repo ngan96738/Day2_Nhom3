@@ -1,0 +1,20 @@
+#ifndef STM32F4XX_SYSCFG_H
+#define STM32F4XX_SYSCFG_H
+
+#include "stm32f4xx_hal.h"
+
+/**
+ * @brief Cấu hình kết nối GPIO Port với EXTI Line (Sử dụng thanh ghi SYSCFG_EXTICR)
+ * @param GPIO_Port_Source: Cổng nguồn (Ví dụ: GPIO_GET_INDEX(GPIOA))
+ * @param GPIO_Pin_Source: Chân nguồn (Ví dụ: GPIO_PIN_0 -> Line 0)
+ */
+void SYSCFG_Set_EXTI_Line(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin);
+
+/**
+ * @brief Bật hoặc tắt chức năng bù đắp (Compensation Cell) cho I/O
+ * (Thường dùng cho tần số cao > 50MHz)
+ * @param state: ENABLE hoặc DISABLE
+ */
+void SYSCFG_CompensationCell_Control(FunctionalState state);
+
+#endif /* STM32F4XX_SYSCFG_H */

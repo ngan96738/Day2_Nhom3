@@ -1,0 +1,36 @@
+#include "stm32f4xx_exti.h"
+
+void EXTI_Config(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, EXTI_Edge_t Edge) {
+    GPIO_InitTypeDef GPIO_InitStruct = {0};
+
+    // 1. Bật Clock cho Port GPIO tương ứng
+    if (GPIOx == GPIOA)      __HAL_RCC_GPIOA_CLK_ENABLE();
+    else if (GPIOx == GPIOB) __HAL_RCC_GPIOB_CLK_ENABLE();
+    else if (GPIOx == GPIOC) __HAL_RCC_GPIOC_CLK_ENABLE();
+    else if (GPIOx == GPIOD) __HAL_RCC_GPIOD_CLK_ENABLE();
+    else if (GPIOx == GPIOE) __HAL_RCC_GPIOE_CLK_ENABLE();
+
+    // 2. Cấu hình chân Pin ở chế độ Ngắt (Interrupt Mode)
+    GPIO_InitStruct.Pin = GPIO_Pin;
+    GPIO_InitStruct.Pull = GPIO_PULLUP; // Thường dùng cho nút nhấn tích cực thấp
+
+    switch (Edge) {
+        case EXTI_EDGE_RISING:
+            GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+            break;
+        case EXTI_EDGE_FALLING:
+            GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+            break;
+        case EXTI_EDGE_RISING_FALLING:
+            GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
+            break;
+    }
+
+    HAL_GPIO_Init(GPIOx, &GPIO_InitStruct);
+}
+
+void EXTI_Enable_NVIC(IRQn_Type IRQn, uint32_t Priority) {
+    // Thiết lập độ ưu tiên và bật ngắt trong hệ thống
+    HAL_NVIC_SetPriority(IRQn, Priority, 0);
+    HAL_NVIC_EnableIRQ(IRQn);
+}

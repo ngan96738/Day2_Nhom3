@@ -1,0 +1,11 @@
+#ifndef MISC_H
+#define MISC_H
+
+#include "main.h" // Chứa các định nghĩa HAL và Pin
+
+// Định nghĩa các hàm tiện ích
+void MISC_Control_LED(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, uint8_t state);
+void MISC_Delay_Ms(uint32_t ms);
+float MISC_Map(float x, float in_min, float in_max, float out_min, float out_max);
+
+#endif

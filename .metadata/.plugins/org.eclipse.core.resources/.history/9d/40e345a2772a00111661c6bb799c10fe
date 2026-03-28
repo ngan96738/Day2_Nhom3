@@ -1,0 +1,16 @@
+#include "misc.h"
+
+// Hàm điều khiển LED nhanh
+void MISC_Control_LED(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, uint8_t state) {
+    HAL_GPIO_WritePin(GPIOx, GPIO_Pin, state ? GPIO_PIN_SET : GPIO_PIN_RESET);
+}
+
+// Hàm delay dựa trên HAL
+void MISC_Delay_Ms(uint32_t ms) {
+    HAL_Delay(ms);
+}
+
+// Hàm ánh xạ giá trị (tương tự map trong Arduino)
+float MISC_Map(float x, float in_min, float in_max, float out_min, float out_max) {
+    return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+}
